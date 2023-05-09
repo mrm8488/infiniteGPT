@@ -1,4 +1,6 @@
+import argparse
 import openai
+from tqdm import tqdm
 import os
 from concurrent.futures import ThreadPoolExecutor
 
@@ -46,13 +48,18 @@ def process_chunks(task, input_file, output_file):
     
     # Processes chunks in parallel
     with ThreadPoolExecutor() as executor:
-        responses = list(executor.map(call_openai_api, task, chunks))
-
+        responses = list(tqdm(executor.map(lambda chunk: call_openai_api(task, chunk), chunks), total=len(chunks), desc="Processing chunks"))
     save_to_file(responses, output_file)
 
-# Specify your input and output files
+def main():
+    parser = argparse.ArgumentParser(description='Process text chunks with OpenAI API.')
+    parser.add_argument('task', type=str, help='Task to perform, e.g., "summarize" or "translate".')
+    parser.add_argument('input_file', type=str, help='Path to the input text file.')
+    parser.add_argument('output_file', type=str, help='Path to the output text file.')
+
+    args = parser.parse_args()
+
+    process_chunks(args.task, args.input_file, args.output_file)
+
 if __name__ == "__main__":
-    input_file = "your_input_here.txt"
-    output_file = "your_output_here.txt"
-    task = "summarize"
-    process_chunks(task, input_file, output_file)
+    main()
