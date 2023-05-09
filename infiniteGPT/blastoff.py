@@ -17,13 +17,13 @@ def save_to_file(responses, output_file):
         for response in responses:
             file.write(response + '\n')
 
-def call_openai_api(chunk):
+def call_openai_api(task, chunk):
     try:
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": f"Please summarize the following: {chunk}."},
+                {"role": "user", "content": f"Please {task} the following: {chunk}."},
             ],
             max_tokens=1750,
             n=1,
@@ -40,13 +40,13 @@ def split_into_chunks(text, tokens=1500):
     chunks = [' '.join(words[i:i + tokens]) for i in range(0, len(words), tokens)]
     return chunks
 
-def process_chunks(input_file, output_file):
+def process_chunks(task, input_file, output_file):
     text = load_text(input_file)
     chunks = split_into_chunks(text)
     
     # Processes chunks in parallel
     with ThreadPoolExecutor() as executor:
-        responses = list(executor.map(call_openai_api, chunks))
+        responses = list(executor.map(call_openai_api, task, chunks))
 
     save_to_file(responses, output_file)
 
@@ -54,4 +54,5 @@ def process_chunks(input_file, output_file):
 if __name__ == "__main__":
     input_file = "your_input_here.txt"
     output_file = "your_output_here.txt"
-    process_chunks(input_file, output_file)
+    task = "summarize"
+    process_chunks(task, input_file, output_file)
